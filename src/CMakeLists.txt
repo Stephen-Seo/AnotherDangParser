@@ -6,11 +6,18 @@ set(Parser_VERSION_MINOR 0)
 
 set(Parser_SOURCES
     AnotherDangParser.cpp
-    OptionFlag.cpp
+    OptionFlag.cpp)
+
+set(ParserTest_SOURCES
     main.cpp)
 
-add_executable(Parser
+add_library(Parser
     ${Parser_SOURCES})
+
+add_executable(ParserTest
+    ${ParserTest_SOURCES})
+
+target_link_libraries(ParserTest Parser)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
