@@ -6,6 +6,7 @@ set(Parser_VERSION_MINOR 0)
 
 set(Parser_SOURCES
     AnotherDangParser.cpp
+    OptionFlag.cpp
     main.cpp)
 
 add_executable(Parser
