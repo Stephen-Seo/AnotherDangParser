@@ -1,4 +1,7 @@
 
+#ifndef OPTION_FLAG_HPP
+#define OPTION_FLAG_HPP
+
 #include <string>
 
 struct OptionFlag
@@ -12,3 +15,6 @@ struct OptionFlag
     std::string optionFlag;
     int priority;
 };
+
+#endif
+

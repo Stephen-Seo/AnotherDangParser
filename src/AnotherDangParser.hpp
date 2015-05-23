@@ -1,4 +1,7 @@
 
+#ifndef ANOTHER_DANG_PARSER_HPP
+#define ANOTHER_DANG_PARSER_HPP
+
 #include <functional>
 #include <string>
 #include <map>
@@ -19,4 +22,6 @@ private:
     std::regex dashRegex;
 
 };
+
+#endif
 
