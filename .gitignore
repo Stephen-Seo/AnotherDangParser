@@ -1,3 +1,4 @@
 *.o
 build*/
+doxygen_html/
 

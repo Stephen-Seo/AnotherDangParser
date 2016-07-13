@@ -4,22 +4,62 @@
 
 #include <functional>
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <regex>
+#include <iostream>
 
 class AnotherDangParser
 {
 public:
-    AnotherDangParser();
-    ~AnotherDangParser();
-
+    /// registers a flag (i.e. "-v")
+    /**
+    *   The flag must be specified without the leading dash.
+    */
     void addFlag(std::string flag, std::function<void()> callback);
+    /// registers an option flag (i.e. "-o outputName")
+    /**
+    *   The flag must be specified without the leading dash.
+    */
     void addOptionFlag(std::string flag, std::function<void(std::string)> callback);
+    /// registers a long flag (i.e. "--verbose")
+    /**
+    *   The flag must be specified without the leading dashes.
+    */
+    void addLongFlag(std::string lflag, std::function<void()> callback);
+    /// registers a long option flag (i.e. "--output=outputName")
+    /**
+    *   The flag must be specified without the leading dashes.
+    */
+    void addLongOptionFlag(std::string lflag, std::function<void(std::string)> callback);
+    /// aliases a flag with an existing one
+    /**
+    *   The format of all input flags is expected to be like "-o" or "--output".
+    *   If the new flag already is registered, an exception will be thrown.
+    */
+    void aliasFlag(std::string existingFlag, std::string newFlag);
     void parse(int argc, char** argv, bool ignoreFirstParameter = true);
+    void printHelp(std::ostream& ostream = std::cout);
+
 private:
-    std::map<std::string, std::function<void()> > callbacks;
-    std::map<std::string, std::function<void(std::string)> > optionCallbacks;
-    std::regex dashRegex;
+    template <typename T>
+    struct CallbackHolder
+    {
+        std::function<T> callback;
+        std::string description;
+    }
+
+    std::unordered_map<std::string, std::function<void()> > callbacks;
+    std::unordered_map<std::string, std::function<void(std::string)> > optionCallbacks;
+    std::unordered_map<std::string, std::function<void()> > longCallbacks;
+    std::unordered_map<std::string, std::function<void(std::string)> > longOptionCallbacks;
+    std::unordered_map<std::string, std::string> aliases;
+    std::unordered_map<std::string, std::string> optionAliases;
+    std::unordered_map<std::string, std::string> longAliases;
+    std::unordered_map<std::string, std::string> longOptionAliases;
+    static const std::regex dashRegex;
+    static const std::regex dashFullRegex;
+    static const std::regex longRegex;
+    static const std::regex longFullRegex;
 
 };
 
