@@ -30,7 +30,9 @@ int main(int argc, char** argv)
     p.aliasFlag("-o", "-i");
     p.aliasFlag("-v", "-x");
     p.aliasFlag("--derp", "--anotherDerp");
+    p.aliasFlag("--derp", "-d");
     p.aliasFlag("--test", "--altTest");
+    p.aliasFlag("--test", "-t");
 
     if(argc > 1)
     {

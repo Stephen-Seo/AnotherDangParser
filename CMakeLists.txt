@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(Parser)
 
-set(Parser_VERISON_MAJOR 1)
+set(Parser_VERSION_MAJOR 2)
 set(Parser_VERSION_MINOR 0)
 
 set(Parser_SOURCES
@@ -18,6 +18,8 @@ add_library(Parser
 
 add_executable(ParserTest
     ${ParserTest_SOURCES})
+
+set_target_properties(Parser PROPERTIES VERSION "${Parser_VERSION_MAJOR}.${Parser_VERSION_MINOR}")
 
 target_link_libraries(ParserTest Parser)
 
