@@ -1,36 +1,44 @@
 
 #include "AnotherDangParser.hpp"
-#include "OptionFlag.hpp"
 
 #include <cstring>
 #include <queue>
 #include <vector>
 #include <stdexcept>
-#include <set>
+
+#include "OptionFlag.hpp"
 
 const std::regex AnotherDangParser::dashRegex("^-[^-].*$");
 const std::regex AnotherDangParser::dashFullRegex("^-([a-zA-Z])$");
 const std::regex AnotherDangParser::longRegex("^--([a-zA-Z]+)$");
 const std::regex AnotherDangParser::longFullRegex("^--([a-zA-Z]+)=(.+)$");
 
-void AnotherDangParser::addFlag(std::string flag, std::function<void()> callback)
+AnotherDangParser::AnotherDangParser() :
+isDirty(true)
+{}
+
+void AnotherDangParser::addFlag(std::string flag, std::function<void()> callback, std::string helpText)
 {
-    callbacks.insert(std::make_pair(flag, callback));
+    callbacks.insert(std::make_pair(flag, CallbackHolder<void>(callback, helpText)));
+    isDirty = true;
 }
 
-void AnotherDangParser::addOptionFlag(std::string flag, std::function<void(std::string)> callback)
+void AnotherDangParser::addOptionFlag(std::string flag, std::function<void(std::string)> callback, std::string helpText)
 {
-    optionCallbacks.insert(std::make_pair(flag, callback));
+    optionCallbacks.insert(std::make_pair(flag, CallbackHolder<void, std::string>(callback, helpText)));
+    isDirty = true;
 }
 
-void AnotherDangParser::addLongFlag(std::string lflag, std::function<void()> callback)
+void AnotherDangParser::addLongFlag(std::string lflag, std::function<void()> callback, std::string helpText)
 {
-    longCallbacks.insert(std::make_pair(lflag, callback));
+    longCallbacks.insert(std::make_pair(lflag, CallbackHolder<void>(callback, helpText)));
+    isDirty = true;
 }
 
-void AnotherDangParser::addLongOptionFlag(std::string lflag, std::function<void(std::string)> callback)
+void AnotherDangParser::addLongOptionFlag(std::string lflag, std::function<void(std::string)> callback, std::string helpText)
 {
-    longOptionCallbacks.insert(std::make_pair(lflag, callback));
+    longOptionCallbacks.insert(std::make_pair(lflag, CallbackHolder<void, std::string>(callback, helpText)));
+    isDirty = true;
 }
 
 void AnotherDangParser::aliasFlag(std::string existingFlag, std::string newFlag)
@@ -138,6 +146,7 @@ void AnotherDangParser::aliasFlag(std::string existingFlag, std::string newFlag)
             aliases.insert(std::make_pair(nMatch[1], eMatch[1]));
         }
     }
+    isDirty = true;
 }
 
 void AnotherDangParser::parse(int argc, char** argv, bool ignoreFirstParameter)
@@ -148,6 +157,7 @@ void AnotherDangParser::parse(int argc, char** argv, bool ignoreFirstParameter)
         ++argv;
     }
 
+    std::set<std::string> usedFlags;
     std::priority_queue<OptionFlag, std::vector<OptionFlag>, std::greater<OptionFlag> > optionFlagQueue;
     while(argc > 0)
     {
@@ -164,28 +174,35 @@ void AnotherDangParser::parse(int argc, char** argv, bool ignoreFirstParameter)
                     auto oiter = optionCallbacks.find(flag);
                     auto aiter = aliases.find(flag);
                     auto oaiter = optionAliases.find(flag);
-                    if(iter != callbacks.end())
+                    if(iter != callbacks.end() &&
+                        usedFlags.find(flag) == usedFlags.end())
                     {
-                        iter->second();
+                        iter->second.callback();
+                        usedFlags.insert(flag);
                     }
-                    else if(oiter != optionCallbacks.end())
+                    else if(oiter != optionCallbacks.end() &&
+                        usedFlags.find(flag) == usedFlags.end())
                     {
                         optionFlagQueue.push(OptionFlag(flag, i++));
                     }
-                    else if(aiter != aliases.end())
+                    else if(aiter != aliases.end() &&
+                        usedFlags.find(aiter->second) == usedFlags.end())
                     {
                         auto a2c = callbacks.find(aiter->second);
                         auto a2lc = longCallbacks.find(aiter->second);
                         if(a2c != callbacks.end())
                         {
-                            a2c->second();
+                            a2c->second.callback();
+                            usedFlags.insert(a2c->first);
                         }
                         else if(a2lc != longCallbacks.end())
                         {
-                            a2lc->second();
+                            a2lc->second.callback();
+                            usedFlags.insert(a2lc->first);
                         }
                     }
-                    else if(oaiter != optionAliases.end())
+                    else if(oaiter != optionAliases.end() &&
+                        usedFlags.find(oaiter->second) == usedFlags.end())
                     {
                         auto oa2o = optionCallbacks.find(oaiter->second);
                         auto oa2lo = longOptionCallbacks.find(oaiter->second);
@@ -208,21 +225,26 @@ void AnotherDangParser::parse(int argc, char** argv, bool ignoreFirstParameter)
                     std::string longName = match[1];
                     auto iter = longCallbacks.find(longName);
                     auto laiter = longAliases.find(longName);
-                    if(iter != longCallbacks.end())
+                    if(iter != longCallbacks.end() &&
+                        usedFlags.find(longName) == usedFlags.end())
                     {
-                        iter->second();
+                        iter->second.callback();
+                        usedFlags.insert(longName);
                     }
-                    else if(laiter != longAliases.end())
+                    else if(laiter != longAliases.end() &&
+                        usedFlags.find(laiter->second) == usedFlags.end())
                     {
                         auto la2c = callbacks.find(laiter->second);
                         auto la2lc = longCallbacks.find(laiter->second);
                         if(la2c != callbacks.end())
                         {
-                            la2c->second();
+                            la2c->second.callback();
+                            usedFlags.insert(la2c->first);
                         }
                         else if(la2lc != longCallbacks.end())
                         {
-                            la2lc->second();
+                            la2lc->second.callback();
+                            usedFlags.insert(la2lc->first);
                         }
                     }
                 }
@@ -231,21 +253,26 @@ void AnotherDangParser::parse(int argc, char** argv, bool ignoreFirstParameter)
                     std::string longName = match[1];
                     auto iter = longOptionCallbacks.find(longName);
                     auto loaiter = longOptionAliases.find(longName);
-                    if(iter != longOptionCallbacks.end())
+                    if(iter != longOptionCallbacks.end() &&
+                        usedFlags.find(longName) == usedFlags.end())
                     {
-                        iter->second(match[2]);
+                        iter->second.callback(match[2]);
+                        usedFlags.insert(longName);
                     }
-                    else if(loaiter != longOptionAliases.end())
+                    else if(loaiter != longOptionAliases.end() &&
+                        usedFlags.find(loaiter->second) == usedFlags.end())
                     {
                         auto loa2oc = optionCallbacks.find(loaiter->second);
                         auto loa2loc = longOptionCallbacks.find(loaiter->second);
                         if(loa2oc != optionCallbacks.end())
                         {
-                            loa2oc->second(match[2]);
+                            loa2oc->second.callback(match[2]);
+                            usedFlags.insert(loa2oc->first);
                         }
                         else if(loa2loc != longOptionCallbacks.end())
                         {
-                            loa2loc->second(match[2]);
+                            loa2loc->second.callback(match[2]);
+                            usedFlags.insert(loa2loc->first);
                         }
                     }
                 }
@@ -260,11 +287,13 @@ void AnotherDangParser::parse(int argc, char** argv, bool ignoreFirstParameter)
             auto loc = longOptionCallbacks.find(of.optionFlag);
             if(oc != optionCallbacks.end())
             {
-                oc->second(std::string(argv[0]));
+                oc->second.callback(std::string(argv[0]));
+                usedFlags.insert(oc->first);
             }
             else if(loc != longOptionCallbacks.end())
             {
-                loc->second(std::string(argv[0]));
+                loc->second.callback(std::string(argv[0]));
+                usedFlags.insert(loc->first);
             }
             else
             {
@@ -279,5 +308,145 @@ void AnotherDangParser::parse(int argc, char** argv, bool ignoreFirstParameter)
 
 void AnotherDangParser::printHelp(std::ostream& ostream)
 {
+    if(isDirty)
+    {
+        helpCache.clear();
+        for(auto iter = callbacks.begin(); iter != callbacks.end(); ++iter)
+        {
+            HelpInfo helpInfo(iter->first, false, false, iter->second.helpText);
+            for(auto aiter = aliases.begin(); aiter != aliases.end(); ++aiter)
+            {
+                if(aiter->second == iter->first)
+                {
+                    helpInfo.aliases.push_back("-" + aiter->first);
+                }
+            }
+            for(auto aiter = longAliases.begin(); aiter != longAliases.end(); ++aiter)
+            {
+                if(aiter->second == iter->first)
+                {
+                    helpInfo.aliases.push_back("--" + aiter->first);
+                }
+            }
+            helpCache.insert(helpInfo);
+        }
+        for(auto iter = optionCallbacks.begin(); iter != optionCallbacks.end(); ++iter)
+        {
+            HelpInfo helpInfo(iter->first, false, true, iter->second.helpText);
+            for(auto aiter = optionAliases.begin(); aiter != optionAliases.end(); ++aiter)
+            {
+                if(aiter->second == iter->first)
+                {
+                    helpInfo.aliases.push_back("-" + aiter->first);
+                }
+            }
+            for(auto aiter = longOptionAliases.begin(); aiter != longOptionAliases.end(); ++aiter)
+            {
+                if(aiter->second == iter->first)
+                {
+                    helpInfo.aliases.push_back("--" + aiter->first);
+                }
+            }
+            helpCache.insert(helpInfo);
+        }
+        for(auto iter = longCallbacks.begin(); iter != longCallbacks.end(); ++iter)
+        {
+            HelpInfo helpInfo(iter->first, true, false, iter->second.helpText);
+            for(auto aiter = aliases.begin(); aiter != aliases.end(); ++aiter)
+            {
+                if(aiter->second == iter->first)
+                {
+                    helpInfo.aliases.push_back("-" + aiter->first);
+                }
+            }
+            for(auto aiter = longAliases.begin(); aiter != longAliases.end(); ++aiter)
+            {
+                if(aiter->second == iter->first)
+                {
+                    helpInfo.aliases.push_back("--" + aiter->first);
+                }
+            }
+            helpCache.insert(helpInfo);
+        }
+        for(auto iter = longOptionCallbacks.begin(); iter != longOptionCallbacks.end(); ++iter)
+        {
+            HelpInfo helpInfo(iter->first, true, true, iter->second.helpText);
+            for(auto aiter = optionAliases.begin(); aiter != optionAliases.end(); ++aiter)
+            {
+                if(aiter->second == iter->first)
+                {
+                    helpInfo.aliases.push_back("-" + aiter->first);
+                }
+            }
+            for(auto aiter = longOptionAliases.begin(); aiter != longOptionAliases.end(); ++aiter)
+            {
+                if(aiter->second == iter->first)
+                {
+                    helpInfo.aliases.push_back("--" + aiter->first);
+                }
+            }
+            helpCache.insert(helpInfo);
+        }
+        isDirty = false;
+    }
+
+    ostream << "Usage:\n";
+    for(auto iter = helpCache.begin(); iter != helpCache.end(); ++iter)
+    {
+        if(iter->isLong)
+        {
+            ostream << "  --";
+        }
+        else
+        {
+            ostream << "  -";
+        }
+
+        ostream << iter->flag << "\naliases:\n  ";
+
+        for(auto aiter = iter->aliases.begin(); aiter != iter->aliases.end(); ++aiter)
+        {
+            ostream << *aiter << " ";
+        }
+
+        ostream << "\n";
+
+        if(iter->helpText.empty())
+        {
+            ostream << "(No help text provided.)";
+        }
+        else
+        {
+            ostream << iter->helpText;
+        }
+
+        ostream << "\nexample: ";
+
+        if(iter->isLong)
+        {
+            if(iter->requiresOption)
+            {
+                ostream << "--" << iter->flag << "=<parameter>";
+            }
+            else
+            {
+                ostream << "--" << iter->flag;
+            }
+        }
+        else
+        {
+            if(iter->requiresOption)
+            {
+                ostream << "-" << iter->flag << " <parameter>";
+            }
+            else
+            {
+                ostream << "-" << iter->flag;
+            }
+        }
+
+        ostream << "\n\n";
+    }
+    ostream << std::endl;
 }
 

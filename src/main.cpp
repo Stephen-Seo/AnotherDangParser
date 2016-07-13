@@ -32,6 +32,13 @@ int main(int argc, char** argv)
     p.aliasFlag("--derp", "--anotherDerp");
     p.aliasFlag("--test", "--altTest");
 
-    p.parse(argc, argv);
+    if(argc > 1)
+    {
+        p.parse(argc, argv);
+    }
+    else
+    {
+        p.printHelp();
+    }
 }
 

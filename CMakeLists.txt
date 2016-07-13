@@ -6,7 +6,9 @@ set(Parser_VERSION_MINOR 0)
 
 set(Parser_SOURCES
     src/AnotherDangParser.cpp
-    src/OptionFlag.cpp)
+    src/OptionFlag.cpp
+    src/HelpInfo.cpp
+)
 
 set(ParserTest_SOURCES
     src/main.cpp)
