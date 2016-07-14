@@ -11,6 +11,9 @@
 
 #include "HelpInfo.hpp"
 
+namespace ADP
+{
+
 class AnotherDangParser
 {
 public:
@@ -75,6 +78,8 @@ private:
     bool isDirty;
 
 };
+
+} // namespace ADP
 
 #endif
 

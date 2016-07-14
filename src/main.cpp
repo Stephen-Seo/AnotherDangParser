@@ -1,5 +1,5 @@
 
-#include "AnotherDangParser.hpp"
+#include <ADP/AnotherDangParser.hpp>
 
 #include <iostream>
 #include <cstdlib>
@@ -7,6 +7,8 @@
 
 int main(int argc, char** argv)
 {
+    using namespace ADP;
+
     AnotherDangParser p;
 
     p.addFlag("v", [] () {

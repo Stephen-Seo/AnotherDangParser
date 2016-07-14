@@ -1,6 +1,8 @@
 
 #include "HelpInfo.hpp"
 
+using namespace ADP;
+
 HelpInfo::HelpInfo(std::string flag, bool isLong, bool requiresOption, std::string helpText) :
 flag(flag),
 isLong(isLong),

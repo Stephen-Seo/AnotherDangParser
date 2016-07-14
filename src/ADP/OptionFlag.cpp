@@ -1,6 +1,8 @@
 
 #include "OptionFlag.hpp"
 
+using namespace ADP;
+
 OptionFlag::OptionFlag() :
 optionFlag(),
 priority(0)

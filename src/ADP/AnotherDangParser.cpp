@@ -8,6 +8,8 @@
 
 #include "OptionFlag.hpp"
 
+using namespace ADP;
+
 const std::regex AnotherDangParser::dashRegex("^-[^-].*$");
 const std::regex AnotherDangParser::dashFullRegex("^-([a-zA-Z])$");
 const std::regex AnotherDangParser::longRegex("^--([a-zA-Z]+)$");

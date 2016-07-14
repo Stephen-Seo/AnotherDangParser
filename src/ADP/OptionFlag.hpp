@@ -4,6 +4,9 @@
 
 #include <string>
 
+namespace ADP
+{
+
 struct OptionFlag
 {
     OptionFlag();
@@ -15,6 +18,8 @@ struct OptionFlag
     std::string optionFlag;
     int priority;
 };
+
+} // namespace ADP
 
 #endif
 

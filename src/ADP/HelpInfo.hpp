@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 
+namespace ADP
+{
+
 struct HelpInfo
 {
     HelpInfo() = default;
@@ -19,6 +22,8 @@ struct HelpInfo
 
     bool operator <(const HelpInfo& other) const;
 };
+
+} // namespace ADP
 
 #endif
 
