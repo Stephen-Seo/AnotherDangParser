@@ -31,7 +31,7 @@ set_target_properties(AnotherDangParser PROPERTIES
 
 target_link_libraries(ParserTest AnotherDangParser)
 
-target_include_directories(ParserTest PUBLIC ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(ParserTest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -Wpedantic")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
