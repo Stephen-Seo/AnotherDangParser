@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(AnotherDangParser)
 
 set(AnotherDangParser_VERSION_MAJOR 2)
-set(AnotherDangParser_VERSION_MINOR 0)
+set(AnotherDangParser_VERSION_MINOR 1)
 
 set(AnotherDangParser_SOURCES
     src/ADP/AnotherDangParser.cpp
@@ -44,8 +44,9 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 install(TARGETS AnotherDangParser
-    LIBRARY DESTINATION usr/lib
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
 )
 
-install(FILES ${AnotherDangParser_HEADERS} DESTINATION usr/include/ADP)
+install(FILES ${AnotherDangParser_HEADERS} DESTINATION include/ADP)
 
