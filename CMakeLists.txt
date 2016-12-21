@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(AnotherDangParser)
 
 set(AnotherDangParser_VERSION_MAJOR 2)
-set(AnotherDangParser_VERSION_MINOR 1)
+set(AnotherDangParser_VERSION_MINOR 2)
 
 set(AnotherDangParser_SOURCES
     src/ADP/AnotherDangParser.cpp
