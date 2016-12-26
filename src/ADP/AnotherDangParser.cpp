@@ -151,15 +151,15 @@ void AnotherDangParser::aliasFlag(std::string existingFlag, std::string newFlag)
     isDirty = true;
 }
 
-void AnotherDangParser::parse(int argc, char** argv, bool ignoreFirstParameter)
+bool AnotherDangParser::parse(int argc, char** argv, bool stopOnInvalidInput)
 {
-    if(ignoreFirstParameter)
-    {
-        --argc;
-        ++argv;
-    }
+    // ignore first parameter which is typically the name of the program
+    // with the relative/abosulte path to it
+    --argc;
+    ++argv;
 
-    std::set<std::string> usedFlags;
+    bool gotInvalidInput = false;
+
     std::priority_queue<OptionFlag, std::vector<OptionFlag>, std::greater<OptionFlag> > optionFlagQueue;
     while(argc > 0)
     {
@@ -169,42 +169,40 @@ void AnotherDangParser::parse(int argc, char** argv, bool ignoreFirstParameter)
             {
                 unsigned int i = 0;
                 std::string flag;
-                for(char* arg = argv[0]; arg[0] != '\0'; ++arg)
+                // iterate through all short flags clumped together
+                for(char* arg = argv[0] + 1; arg[0] != '\0'; ++arg)
                 {
                     flag.assign(1, arg[0]);
                     auto iter = callbacks.find(flag);
                     auto oiter = optionCallbacks.find(flag);
                     auto aiter = aliases.find(flag);
                     auto oaiter = optionAliases.find(flag);
-                    if(iter != callbacks.end() &&
-                        usedFlags.find(flag) == usedFlags.end())
+                    if(iter != callbacks.end())
                     {
                         iter->second.callback();
-                        usedFlags.insert(flag);
                     }
-                    else if(oiter != optionCallbacks.end() &&
-                        usedFlags.find(flag) == usedFlags.end())
+                    else if(oiter != optionCallbacks.end())
                     {
                         optionFlagQueue.push(OptionFlag(flag, i++));
                     }
-                    else if(aiter != aliases.end() &&
-                        usedFlags.find(aiter->second) == usedFlags.end())
+                    else if(aiter != aliases.end())
                     {
                         auto a2c = callbacks.find(aiter->second);
                         auto a2lc = longCallbacks.find(aiter->second);
                         if(a2c != callbacks.end())
                         {
                             a2c->second.callback();
-                            usedFlags.insert(a2c->first);
                         }
                         else if(a2lc != longCallbacks.end())
                         {
                             a2lc->second.callback();
-                            usedFlags.insert(a2lc->first);
+                        }
+                        else
+                        {
+                            throw std::runtime_error("ERROR: Failed to find matching alias!");
                         }
                     }
-                    else if(oaiter != optionAliases.end() &&
-                        usedFlags.find(oaiter->second) == usedFlags.end())
+                    else if(oaiter != optionAliases.end())
                     {
                         auto oa2o = optionCallbacks.find(oaiter->second);
                         auto oa2lo = longOptionCallbacks.find(oaiter->second);
@@ -216,10 +214,25 @@ void AnotherDangParser::parse(int argc, char** argv, bool ignoreFirstParameter)
                         {
                             optionFlagQueue.push(OptionFlag(oa2lo->first, i++));
                         }
+                        else
+                        {
+                            throw std::runtime_error("ERROR: Failed to find matching alias!");
+                        }
+                    }
+                    else
+                    {
+#ifndef NDEBUG
+                        std::cout << "Got invalid input with " << flag << std::endl;
+#endif
+                        if(stopOnInvalidInput)
+                        {
+                            return false;
+                        }
+                        gotInvalidInput = true;
                     }
                 }
             }
-            else
+            else // did not match dashRegex
             {
                 std::cmatch match;
                 if(std::regex_match(argv[0], match, AnotherDangParser::longRegex))
@@ -227,27 +240,37 @@ void AnotherDangParser::parse(int argc, char** argv, bool ignoreFirstParameter)
                     std::string longName = match[1];
                     auto iter = longCallbacks.find(longName);
                     auto laiter = longAliases.find(longName);
-                    if(iter != longCallbacks.end() &&
-                        usedFlags.find(longName) == usedFlags.end())
+                    if(iter != longCallbacks.end())
                     {
                         iter->second.callback();
-                        usedFlags.insert(longName);
                     }
-                    else if(laiter != longAliases.end() &&
-                        usedFlags.find(laiter->second) == usedFlags.end())
+                    else if(laiter != longAliases.end())
                     {
                         auto la2c = callbacks.find(laiter->second);
                         auto la2lc = longCallbacks.find(laiter->second);
                         if(la2c != callbacks.end())
                         {
                             la2c->second.callback();
-                            usedFlags.insert(la2c->first);
                         }
                         else if(la2lc != longCallbacks.end())
                         {
                             la2lc->second.callback();
-                            usedFlags.insert(la2lc->first);
                         }
+                        else
+                        {
+                            throw std::runtime_error("ERROR: Failed to find matching alias!");
+                        }
+                    }
+                    else
+                    {
+#ifndef NDEBUG
+                        std::cout << "Got invalid input with " << longName << std::endl;
+#endif
+                        if(stopOnInvalidInput)
+                        {
+                            return false;
+                        }
+                        gotInvalidInput = true;
                     }
                 }
                 else if(std::regex_match(argv[0], match, AnotherDangParser::longFullRegex))
@@ -255,32 +278,50 @@ void AnotherDangParser::parse(int argc, char** argv, bool ignoreFirstParameter)
                     std::string longName = match[1];
                     auto iter = longOptionCallbacks.find(longName);
                     auto loaiter = longOptionAliases.find(longName);
-                    if(iter != longOptionCallbacks.end() &&
-                        usedFlags.find(longName) == usedFlags.end())
+                    if(iter != longOptionCallbacks.end())
                     {
                         iter->second.callback(match[2]);
-                        usedFlags.insert(longName);
                     }
-                    else if(loaiter != longOptionAliases.end() &&
-                        usedFlags.find(loaiter->second) == usedFlags.end())
+                    else if(loaiter != longOptionAliases.end())
                     {
                         auto loa2oc = optionCallbacks.find(loaiter->second);
                         auto loa2loc = longOptionCallbacks.find(loaiter->second);
                         if(loa2oc != optionCallbacks.end())
                         {
                             loa2oc->second.callback(match[2]);
-                            usedFlags.insert(loa2oc->first);
                         }
                         else if(loa2loc != longOptionCallbacks.end())
                         {
                             loa2loc->second.callback(match[2]);
-                            usedFlags.insert(loa2loc->first);
+                        }
+                        else
+                        {
+                            throw std::runtime_error("ERROR: Failed to find matching alias!");
                         }
                     }
+                    else
+                    {
+#ifndef NDEBUG
+                        std::cout << "Got invalid input with " << longName << std::endl;
+#endif
+                        if(stopOnInvalidInput)
+                        {
+                            return false;
+                        }
+                        gotInvalidInput = true;
+                    }
+                }
+                else
+                {
+                    if(stopOnInvalidInput)
+                    {
+                        return false;
+                    }
+                    gotInvalidInput = true;
                 }
             }
         }
-        else
+        else // optionFlagQueue not empty
         {
             OptionFlag of = optionFlagQueue.top();
             optionFlagQueue.pop();
@@ -290,12 +331,10 @@ void AnotherDangParser::parse(int argc, char** argv, bool ignoreFirstParameter)
             if(oc != optionCallbacks.end())
             {
                 oc->second.callback(std::string(argv[0]));
-                usedFlags.insert(oc->first);
             }
             else if(loc != longOptionCallbacks.end())
             {
                 loc->second.callback(std::string(argv[0]));
-                usedFlags.insert(loc->first);
             }
             else
             {
@@ -306,6 +345,16 @@ void AnotherDangParser::parse(int argc, char** argv, bool ignoreFirstParameter)
         --argc;
         ++argv;
     }
+
+    if(!optionFlagQueue.empty())
+    {
+#ifndef NDEBUG
+        std::cout << "Got invalid input because optionFlagQueue was not empty" << std::endl;
+#endif
+        gotInvalidInput = true;
+    }
+
+    return !gotInvalidInput;
 }
 
 void AnotherDangParser::printHelp(std::ostream& ostream)
@@ -392,7 +441,7 @@ void AnotherDangParser::printHelp(std::ostream& ostream)
         isDirty = false;
     }
 
-    ostream << "Usage:\n";
+    ostream << "Usage:\n\n";
     for(auto iter = helpCache.begin(); iter != helpCache.end(); ++iter)
     {
         if(iter->isLong)
@@ -404,11 +453,15 @@ void AnotherDangParser::printHelp(std::ostream& ostream)
             ostream << "  -";
         }
 
-        ostream << iter->flag << "\naliases:\n  ";
+        ostream << iter->flag;
 
-        for(auto aiter = iter->aliases.begin(); aiter != iter->aliases.end(); ++aiter)
+        if(!iter->aliases.empty())
         {
-            ostream << *aiter << " ";
+            ostream << "\nAliases:\n  ";
+            for(auto aiter = iter->aliases.begin(); aiter != iter->aliases.end(); ++aiter)
+            {
+                ostream << *aiter << " ";
+            }
         }
 
         ostream << "\n";
@@ -422,32 +475,57 @@ void AnotherDangParser::printHelp(std::ostream& ostream)
             ostream << iter->helpText;
         }
 
-        ostream << "\nexample: ";
+        ostream << "\nExample(s):\n";
 
         if(iter->isLong)
         {
             if(iter->requiresOption)
             {
-                ostream << "--" << iter->flag << "=<parameter>";
+                ostream << "  --" << iter->flag << "=<parameter>";
             }
             else
             {
-                ostream << "--" << iter->flag;
+                ostream << "  --" << iter->flag;
             }
         }
         else
         {
             if(iter->requiresOption)
             {
-                ostream << "-" << iter->flag << " <parameter>";
+                ostream << "  -" << iter->flag << " <parameter>";
             }
             else
             {
-                ostream << "-" << iter->flag;
+                ostream << "  -" << iter->flag;
+            }
+        }
+        ostream << '\n';
+
+        // alias examples
+        std::smatch smatch;
+        for(auto aiter = iter->aliases.begin(); aiter != iter->aliases.end(); ++aiter)
+        {
+            if(iter->requiresOption)
+            {
+                if(std::regex_match(*aiter, smatch, AnotherDangParser::dashFullRegex))
+                {
+                    // Is short flag
+                    ostream << "  " << *aiter << " <parameter>\n";
+                }
+                else
+                {
+                    // Is long flag
+                    ostream << "  " << *aiter << "=<parameter>\n";
+                }
+            }
+            else
+            {
+                // Either flag, similar output
+                ostream << "  " << *aiter << '\n';
             }
         }
 
-        ostream << "\n\n";
+        ostream << '\n';
     }
     ostream << std::endl;
 }

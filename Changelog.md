@@ -1,4 +1,14 @@
 
+# Version 3.0
+
+parse function now returns True if parsed without invalid input.  
+parse function has changed 3rd parameter, which sets if invalid input
+immediately halts parsing.  
+parse function no longer checks for repeated flags. All repeated flags will be
+called.
+
+printHelp output improved.
+
 # Version 2.2
 
 Fixed building in another project as submodule.

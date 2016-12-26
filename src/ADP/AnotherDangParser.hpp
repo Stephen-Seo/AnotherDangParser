@@ -21,31 +21,46 @@ public:
 
     /// registers a flag (i.e. "-v")
     /**
-    *   The flag must be specified without the leading dash.
+        The flag must be specified without the leading dash.
     */
     void addFlag(std::string flag, std::function<void()> callback, std::string helpText = "");
+
     /// registers an option flag (i.e. "-o outputName")
     /**
-    *   The flag must be specified without the leading dash.
+        The flag must be specified without the leading dash.
     */
     void addOptionFlag(std::string flag, std::function<void(std::string)> callback, std::string helpText = "");
+
     /// registers a long flag (i.e. "--verbose")
     /**
-    *   The flag must be specified without the leading dashes.
+        The flag must be specified without the leading dashes.
     */
     void addLongFlag(std::string lflag, std::function<void()> callback, std::string helpText = "");
+
     /// registers a long option flag (i.e. "--output=outputName")
     /**
-    *   The flag must be specified without the leading dashes.
+        The flag must be specified without the leading dashes.
     */
     void addLongOptionFlag(std::string lflag, std::function<void(std::string)> callback, std::string helpText = "");
+
     /// aliases a flag with an existing one
     /**
-    *   The format of all input flags is expected to be like "-o" or "--output".
-    *   If the new flag already is registered, an exception will be thrown.
+        The format of all input flags is expected to be like "-o" or "--output".
+        If the new flag already is registered, an exception will be thrown.
     */
     void aliasFlag(std::string existingFlag, std::string newFlag);
-    void parse(int argc, char** argv, bool ignoreFirstParameter = true);
+
+    /// Parses commands, executing callbacks depending on the read flags
+    /**
+        If stopOnInvalidInput is set to true, then parsing will immediately
+        return false if invalid input is detected. Otherwise, invalid input
+        will not stop parsing and will only affect the return value.
+
+        \return False if invalid input was detected.
+    */
+    bool parse(int argc, char** argv, bool stopOnInvalidInput = true);
+
+    /// Prints info on all flags
     void printHelp(std::ostream& ostream = std::cout);
 
 private:

@@ -38,7 +38,11 @@ int main(int argc, char** argv)
 
     if(argc > 1)
     {
-        p.parse(argc, argv);
+        if(!p.parse(argc, argv))
+        {
+            std::cout << "Got invalid input, printing help..." << std::endl;
+            p.printHelp();
+        }
     }
     else
     {
