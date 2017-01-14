@@ -12,8 +12,8 @@ using namespace ADP;
 
 const std::regex AnotherDangParser::dashRegex("^-[^-].*$");
 const std::regex AnotherDangParser::dashFullRegex("^-([a-zA-Z])$");
-const std::regex AnotherDangParser::longRegex("^--([a-zA-Z]+)$");
-const std::regex AnotherDangParser::longFullRegex("^--([a-zA-Z]+)=(.+)$");
+const std::regex AnotherDangParser::longRegex("^--([a-zA-Z][a-zA-Z_-]*)$");
+const std::regex AnotherDangParser::longFullRegex("^--([a-zA-Z][a-zA-Z_-]*)=(.+)$");
 
 AnotherDangParser::AnotherDangParser() :
 isDirty(true)
@@ -21,24 +21,44 @@ isDirty(true)
 
 void AnotherDangParser::addFlag(std::string flag, std::function<void()> callback, std::string helpText)
 {
+    if(!checkIsValidShort("-" + flag))
+    {
+        throw std::invalid_argument("Invalid short flag cannot be registered!");
+    }
+
     callbacks.insert(std::make_pair(flag, CallbackHolder<void>(callback, helpText)));
     isDirty = true;
 }
 
 void AnotherDangParser::addOptionFlag(std::string flag, std::function<void(std::string)> callback, std::string helpText)
 {
+    if(!checkIsValidShort("-" + flag))
+    {
+        throw std::invalid_argument("Invalid short flag cannot be registered!");
+    }
+
     optionCallbacks.insert(std::make_pair(flag, CallbackHolder<void, std::string>(callback, helpText)));
     isDirty = true;
 }
 
 void AnotherDangParser::addLongFlag(std::string lflag, std::function<void()> callback, std::string helpText)
 {
+    if(!checkIsValidLong("--" + lflag))
+    {
+        throw std::invalid_argument("Invalid long flag cannot be registered!");
+    }
+
     longCallbacks.insert(std::make_pair(lflag, CallbackHolder<void>(callback, helpText)));
     isDirty = true;
 }
 
 void AnotherDangParser::addLongOptionFlag(std::string lflag, std::function<void(std::string)> callback, std::string helpText)
 {
+    if(!checkIsValidLong("--" + lflag))
+    {
+        throw std::invalid_argument("Invalid long flag cannot be registered!");
+    }
+
     longOptionCallbacks.insert(std::make_pair(lflag, CallbackHolder<void, std::string>(callback, helpText)));
     isDirty = true;
 }
@@ -46,36 +66,30 @@ void AnotherDangParser::addLongOptionFlag(std::string lflag, std::function<void(
 void AnotherDangParser::aliasFlag(std::string existingFlag, std::string newFlag)
 {
     std::smatch eMatch, nMatch;
-    bool eIsValid = false;
-    bool nIsValid = false;
     bool eIsLong, nIsLong;
 
     if(std::regex_match(existingFlag, eMatch, AnotherDangParser::dashFullRegex))
     {
-        eIsValid = true;
         eIsLong = false;
     }
     else if(std::regex_match(existingFlag, eMatch, AnotherDangParser::longRegex))
     {
-        eIsValid = true;
         eIsLong = true;
     }
+    else
+    {
+        throw std::invalid_argument("Existing flag is invalid!");
+    }
+
     if(std::regex_match(newFlag, nMatch, AnotherDangParser::dashFullRegex))
     {
-        nIsValid = true;
         nIsLong = false;
     }
     else if(std::regex_match(newFlag, nMatch, AnotherDangParser::longRegex))
     {
-        nIsValid = true;
         nIsLong = true;
     }
-
-    if(!eIsValid)
-    {
-        throw std::invalid_argument("Existing flag is invalid!");
-    }
-    else if(!nIsValid)
+    else
     {
         throw std::invalid_argument("New flag is invalid!");
     }
@@ -528,5 +542,29 @@ void AnotherDangParser::printHelp(std::ostream& ostream)
         ostream << '\n';
     }
     ostream << std::endl;
+}
+
+bool AnotherDangParser::checkIsValidShort(std::string shortFlag)
+{
+    if(std::regex_match(shortFlag, AnotherDangParser::dashFullRegex))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool AnotherDangParser::checkIsValidLong(std::string longFlag)
+{
+    if(std::regex_match(longFlag, AnotherDangParser::longRegex))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 

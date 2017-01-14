@@ -22,31 +22,37 @@ public:
     /// registers a flag (i.e. "-v")
     /**
         The flag must be specified without the leading dash.
+        If the flag is invalid, "invalid_argument" exception will be thrown.
     */
     void addFlag(std::string flag, std::function<void()> callback, std::string helpText = "");
 
     /// registers an option flag (i.e. "-o outputName")
     /**
         The flag must be specified without the leading dash.
+        If the flag is invalid, "invalid_argument" exception will be thrown.
     */
     void addOptionFlag(std::string flag, std::function<void(std::string)> callback, std::string helpText = "");
 
     /// registers a long flag (i.e. "--verbose")
     /**
         The flag must be specified without the leading dashes.
+        If the flag is invalid, "invalid_argument" exception will be thrown.
     */
     void addLongFlag(std::string lflag, std::function<void()> callback, std::string helpText = "");
 
     /// registers a long option flag (i.e. "--output=outputName")
     /**
         The flag must be specified without the leading dashes.
+        If the flag is invalid, "invalid_argument" exception will be thrown.
     */
     void addLongOptionFlag(std::string lflag, std::function<void(std::string)> callback, std::string helpText = "");
 
     /// aliases a flag with an existing one
     /**
         The format of all input flags is expected to be like "-o" or "--output".
-        If the new flag already is registered, an exception will be thrown.
+        If the new flag already is registered, an "invalid_argument" exception
+        will be thrown.
+        If either flags are invalid, an "invalid_argument" exception will be thrown.
     */
     void aliasFlag(std::string existingFlag, std::string newFlag);
 
@@ -91,6 +97,9 @@ private:
     static const std::regex longFullRegex;
     std::set<HelpInfo> helpCache;
     bool isDirty;
+
+    bool checkIsValidShort(std::string shortFlag);
+    bool checkIsValidLong(std::string longFlag);
 
 };
 

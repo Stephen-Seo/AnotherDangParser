@@ -1,4 +1,10 @@
 
+# Version 3.1
+
+Can now use dashes and underscores `- and _` for long flags.
+Registering flags may now throw exceptions if the flag is invalid.
+More testing added to ParserTest.
+
 # Version 3.0
 
 parse function now returns True if parsed without invalid input.  
