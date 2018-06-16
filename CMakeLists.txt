@@ -1,8 +1,5 @@
-cmake_minimum_required(VERSION 2.8)
-project(AnotherDangParser)
-
-set(AnotherDangParser_VERSION_MAJOR 3)
-set(AnotherDangParser_VERSION_MINOR 1)
+cmake_minimum_required(VERSION 3.0)
+project(AnotherDangParser VERSION 3.1)
 
 set(AnotherDangParser_SOURCES
     src/ADP/AnotherDangParser.cpp
@@ -26,16 +23,19 @@ add_executable(ParserTest
     ${ParserTest_SOURCES})
 
 set_target_properties(AnotherDangParser PROPERTIES
-    VERSION "${AnotherDangParser_VERSION_MAJOR}.${AnotherDangParser_VERSION_MINOR}"
+    VERSION ${AnotherDangParser_VERSION}
+    SOVERSION ${AnotherDangParser_VERSION}
 )
 
 target_link_libraries(ParserTest AnotherDangParser)
 
 target_include_directories(ParserTest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -Wpedantic")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -D NDEBUG")
+
+target_compile_features(AnotherDangParser PUBLIC cxx_std_11)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     message(STATUS "Setting build type to 'Debug', none was specified.")
@@ -49,4 +49,3 @@ install(TARGETS AnotherDangParser
 )
 
 install(FILES ${AnotherDangParser_HEADERS} DESTINATION include/ADP)
-
