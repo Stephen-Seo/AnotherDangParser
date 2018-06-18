@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(AnotherDangParser VERSION 3.1)
+project(AnotherDangParser VERSION 3.2)
 
 set(AnotherDangParser_SOURCES
     src/ADP/AnotherDangParser.cpp

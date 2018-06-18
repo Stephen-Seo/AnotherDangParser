@@ -1,3 +1,8 @@
+# Version 3.2
+
+Print usage/help text improved with parser.  
+LICENSE date updated.  
+Minor fixes to CMakeLists.txt.
 
 # Version 3.1
 
