@@ -455,7 +455,7 @@ void AnotherDangParser::printHelp(std::ostream& ostream)
         isDirty = false;
     }
 
-    ostream << "Usage:\n\n";
+    ostream << "Usage:\n";
     for(auto iter = helpCache.begin(); iter != helpCache.end(); ++iter)
     {
         if(iter->isLong)
@@ -471,14 +471,14 @@ void AnotherDangParser::printHelp(std::ostream& ostream)
 
         if(!iter->aliases.empty())
         {
-            ostream << "\nAliases:\n  ";
+            ostream << "\n  Aliases:\n  ";
             for(auto aiter = iter->aliases.begin(); aiter != iter->aliases.end(); ++aiter)
             {
                 ostream << *aiter << " ";
             }
         }
 
-        ostream << "\n";
+        ostream << "\n  ";
 
         if(iter->helpText.empty())
         {
@@ -489,28 +489,28 @@ void AnotherDangParser::printHelp(std::ostream& ostream)
             ostream << iter->helpText;
         }
 
-        ostream << "\nExample(s):\n";
+        ostream << "\n  Example(s):\n";
 
         if(iter->isLong)
         {
             if(iter->requiresOption)
             {
-                ostream << "  --" << iter->flag << "=<parameter>";
+                ostream << "    --" << iter->flag << "=<parameter>";
             }
             else
             {
-                ostream << "  --" << iter->flag;
+                ostream << "    --" << iter->flag;
             }
         }
         else
         {
             if(iter->requiresOption)
             {
-                ostream << "  -" << iter->flag << " <parameter>";
+                ostream << "    -" << iter->flag << " <parameter>";
             }
             else
             {
-                ostream << "  -" << iter->flag;
+                ostream << "    -" << iter->flag;
             }
         }
         ostream << '\n';
@@ -524,24 +524,24 @@ void AnotherDangParser::printHelp(std::ostream& ostream)
                 if(std::regex_match(*aiter, smatch, AnotherDangParser::dashFullRegex))
                 {
                     // Is short flag
-                    ostream << "  " << *aiter << " <parameter>\n";
+                    ostream << "    " << *aiter << " <parameter>\n";
                 }
                 else
                 {
                     // Is long flag
-                    ostream << "  " << *aiter << "=<parameter>\n";
+                    ostream << "    " << *aiter << "=<parameter>\n";
                 }
             }
             else
             {
                 // Either flag, similar output
-                ostream << "  " << *aiter << '\n';
+                ostream << "    " << *aiter << '\n';
             }
         }
 
         ostream << '\n';
     }
-    ostream << std::endl;
+    ostream << std::flush;
 }
 
 bool AnotherDangParser::checkIsValidShort(std::string shortFlag)
